@@ -1,19 +1,21 @@
 "use client";
 
 import Link from "next/link";
-import { useRouter } from "next/navigation";
-import { useState } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
+import { useState, Suspense } from "react";
 import api from "@/lib/axios";
 import axios from "axios";
 import { Eye, EyeOff, Lock, Mail, Loader2 } from "lucide-react";
 
-export default function LoginPage() {
+function LoginForm() {
   const [formData, setFormData] = useState({ email: "", password: "" });
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState("");
 
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const redirectTo = searchParams.get("redirect") || "/dashboard";
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
@@ -31,7 +33,7 @@ export default function LoginPage() {
 
       if (token) {
         localStorage.setItem("token", token);
-        window.location.href = "/dashboard";
+        window.location.href = redirectTo;
       }
     } catch (err) {
       if (axios.isAxiosError(err)) {
@@ -49,7 +51,6 @@ export default function LoginPage() {
 
   return (
     <div className="min-h-screen grid grid-cols-1 md:grid-cols-2">
-      {/* Left Side: Branding/Visual */}
       <div className="hidden md:flex flex-col justify-center bg-indigo-600 p-12 text-white">
         <h2 className="text-4xl font-bold mb-6">Get Back To Work.</h2>
         <p className="text-indigo-100 text-lg max-w-md">
@@ -64,7 +65,6 @@ export default function LoginPage() {
         </div>
       </div>
 
-      {/* Right Side: Login Form */}
       <div className="flex flex-col justify-center items-center p-8 bg-white">
         <div className="w-full max-w-md space-y-8">
           <div className="text-center">
@@ -156,5 +156,13 @@ export default function LoginPage() {
         </div>
       </div>
     </div>
+  );
+}
+
+export default function LoginPage() {
+  return (
+    <Suspense fallback={<div className="min-h-screen flex items-center justify-center bg-white"><Loader2 className="animate-spin h-8 w-8 text-indigo-600" /></div>}>
+      <LoginForm />
+    </Suspense>
   );
 }
