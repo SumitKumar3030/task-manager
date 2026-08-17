@@ -61,7 +61,7 @@ function LoginForm() {
           <p className="italic text-indigo-50">
             This app cut our standup time in half — everyone just checks the board.
           </p>
-          <p className="mt-4 font-semibold">— Sarah J., Operations Lead</p>
+          <p className="mt-4 font-semibold">— Sumit Verma the King</p>
         </div>
       </div>
 

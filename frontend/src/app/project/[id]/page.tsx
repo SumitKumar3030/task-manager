@@ -4,6 +4,7 @@ import { useEffect, useState, useCallback } from "react";
 import { useParams, useRouter } from "next/navigation";
 import api from "@/lib/axios";
 import axios from "axios";
+import { io, Socket } from "socket.io-client";
 import {
   DndContext,
   DragOverlay,
@@ -69,6 +70,34 @@ export default function ProjectBoardPage() {
       setIsLoading(false);
     }
   }, [id]);
+
+  useEffect(() => {
+  const socket: Socket = io(process.env.NEXT_PUBLIC_API_URL?.replace("/api", ""));
+
+  socket.emit("join-project", id);
+
+  socket.on("task-created", (newTask: Task) => {
+    setTasks((prev) => {
+      if (prev.some((t) => t._id === newTask._id)) return prev;
+      return [...prev, newTask];
+    });
+  });
+
+  socket.on("task-updated", (updatedTask: Task) => {
+    setTasks((prev) =>
+      prev.map((t) => (t._id === updatedTask._id ? updatedTask : t))
+    );
+  });
+
+  socket.on("task-deleted", (deletedId: string) => {
+    setTasks((prev) => prev.filter((t) => t._id !== deletedId));
+  });
+
+  return () => {
+    socket.emit("leave-project", id);
+    socket.disconnect();
+  };
+}, [id]);
 
   useEffect(() => {
     let ignore = false;

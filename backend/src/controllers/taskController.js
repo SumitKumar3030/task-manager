@@ -44,6 +44,12 @@ exports.createTask = async (req, res) => {
 
     await logAction(task._id, req.user._id, "created task", req);
 
+    const populatedTask = await Task.findById(task._id)
+      .populate("assignee", "name email")
+      .populate("createdBy", "name email");
+
+    req.app.get("io").to(projectId).emit("task-created", populatedTask);
+
     res.status(201).json({ success: true, task });
   } catch (error) {
     res.status(500).json({ message: error.message });
@@ -115,6 +121,12 @@ exports.updateTask = async (req, res) => {
 
     await task.save();
 
+    const populatedTask = await Task.findById(task._id)
+      .populate("assignee", "name email")
+      .populate("createdBy", "name email");
+
+    req.app.get("io").to(String(task.project)).emit("task-updated", populatedTask);
+
     res.json({ success: true, task });
   } catch (error) {
     res.status(500).json({ message: error.message });
@@ -129,7 +141,13 @@ exports.deleteTask = async (req, res) => {
     const check = await assertMember(task.workspace, req.user._id);
     if (check.error) return res.status(check.status).json({ message: check.error });
 
+    const projectId = String(task.project);
+    const taskId = String(task._id);
+
     await task.deleteOne();
+
+    req.app.get("io").to(projectId).emit("task-deleted", taskId);
+
     res.json({ success: true, message: "Task deleted" });
   } catch (error) {
     res.status(500).json({ message: error.message });
